@@ -29,7 +29,7 @@ class Deliver_SMTP extends Deliver {
 
     function initStream($message, $domain, $length=0, $host='', $port='', $user='', $pass='', $authpop=false, $pop_host='') {
         global $use_smtp_tls, $smtp_auth_mech;
-
+		
         if ($authpop) {
             $this->authPop($pop_host, '', $user, $pass);
         }
@@ -41,7 +41,7 @@ class Deliver_SMTP extends Deliver {
         $cc =   $rfc822_header->cc;
         $bcc =  $rfc822_header->bcc;
         $content_type  = $rfc822_header->content_type;
-
+		 
         // MAIL FROM: <from address> MUST be empty in cae of MDN (RFC2298)
         if ($content_type->type0 == 'multipart' &&
             $content_type->type1 == 'report' &&
@@ -59,8 +59,9 @@ class Deliver_SMTP extends Deliver {
             $stream = @fsockopen('tls://' . $host, $port, $errorNumber, $errorString);
         } else {
             $stream = @fsockopen($host, $port, $errorNumber, $errorString);
+	 
         }
-
+		
         if (!$stream) {
             $this->dlv_msg = $errorString;
             $this->dlv_ret_nr = $errorNumber;
@@ -94,6 +95,7 @@ class Deliver_SMTP extends Deliver {
         /* Lets introduce ourselves */
         fputs($stream, "EHLO $helohost\r\n");
         $tmp = fgets($stream,1024);
+		
         if ($this->errorCheck($tmp,$stream)) {
             // fall back to HELO if EHLO is not supported (error 5xx)
             if ($this->dlv_ret_nr{0} == '5') {
@@ -106,7 +108,7 @@ class Deliver_SMTP extends Deliver {
                 return(0);
             }
         }
-
+		 
         // Try authentication by a plugin
         //
         // NOTE: there is another hook in functions/auth.php called "smtp_auth"
@@ -122,10 +124,18 @@ class Deliver_SMTP extends Deliver {
             'port' => $port,
             'stream' => $stream,
         );
+		 echo "<br><br>$smtp_auth_mech";	
+		 
         if (boolean_hook_function('smtp_authenticate', $smtp_auth_args, 1)) {
             // authentication succeeded
+			echo "1";
+			exit;
+	
         } else if (( $smtp_auth_mech == 'cram-md5') or ( $smtp_auth_mech == 'digest-md5' )) {
             // Doing some form of non-plain auth
+			echo "2";
+			exit;
+		 
             if ($smtp_auth_mech == 'cram-md5') {
                 fputs($stream, "AUTH CRAM-MD5\r\n");
             } elseif ($smtp_auth_mech == 'digest-md5') {
@@ -166,13 +176,19 @@ class Deliver_SMTP extends Deliver {
             }
         // CRAM-MD5 and DIGEST-MD5 code ends here
         } elseif ($smtp_auth_mech == 'none') {
+			echo "3";
+			exit;
         // No auth at all, just send helo and then send the mail
         // We already said hi earlier, nothing more is needed.
         } elseif ($smtp_auth_mech == 'login') {
             // The LOGIN method
+			 echo "5";
+			exit;
+			echo 'login';
+			exit;
             fputs($stream, "AUTH LOGIN\r\n");
             $tmp = fgets($stream, 1024);
-
+			
             if ($this->errorCheck($tmp, $stream)) {
                 return(0);
             }
@@ -188,9 +204,10 @@ class Deliver_SMTP extends Deliver {
                 return(0);
             }
         } elseif ($smtp_auth_mech == "plain") {
+			 
             /* SASL Plain */
             $auth = base64_encode("$user\0$user\0$pass");
-
+			 
             $query = "AUTH PLAIN\r\n";
             fputs($stream, $query);
             $read=fgets($stream, 1024);
@@ -199,10 +216,12 @@ class Deliver_SMTP extends Deliver {
                 fputs($stream, "$auth\r\n");
                 $read = fgets($stream, 1024);
             }
+			 
 
             $results=explode(" ",$read,3);
             $response=$results[1];
             $message=$results[2];
+			
         } else {
             /* Right here, they've reached an unsupported auth mechanism.
             This is the ugliest hack I've ever done, but it'll do till I can fix
@@ -215,17 +234,27 @@ class Deliver_SMTP extends Deliver {
         /* Ok, who is sending the message? */
         $fromaddress = (strlen($from->mailbox) && $from->host) ?
             $from->mailbox.'@'.$from->host : '';
-        fputs($stream, 'MAIL FROM:<'.$fromaddress.">\r\n");
+			
+		
+		// $fromaddress = "ชั่วโมง@วีคลาส.ไทย";
+		//@TODO add SMTPUTF8
+		
+        fputs($stream, 'MAIL FROM:<'.$fromaddress."> SMTPUTF8\r\n");
         $tmp = fgets($stream, 1024);
+		//echo $tmp;
+		//exit;
         if ($this->errorCheck($tmp, $stream)) {
             return(0);
         }
+	
+		//exit;
 
         /* send who the recipients are */
         for ($i = 0, $cnt = count($to); $i < $cnt; $i++) {
             if (!$to[$i]->host) $to[$i]->host = $domain;
             if (strlen($to[$i]->mailbox)) {
                 fputs($stream, 'RCPT TO:<'.$to[$i]->mailbox.'@'.$to[$i]->host.">\r\n");
+				 //fputs($stream, 'RCPT TO:<'.$fromaddress.">\r\n");
                 $tmp = fgets($stream, 1024);
                 if ($this->errorCheck($tmp, $stream)) {
                     return(0);

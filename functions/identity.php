@@ -28,6 +28,7 @@ function get_identities() {
 
     global $username, $data_dir, $domain;
 
+ 
     $em = getPref($data_dir,$username,'email_address');
     if ( ! $em ) {
         if (strpos($username , '@') == false) {

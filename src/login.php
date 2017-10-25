@@ -11,7 +11,7 @@
  * @version $Id: login.php 14248 2012-01-02 00:18:17Z pdontthink $
  * @package squirrelmail
  */
-
+header('Content-Type: text/html; charset=utf-8');
 /** This is the login page */
 define('PAGE_NAME', 'login');
 
@@ -19,6 +19,7 @@ define('PAGE_NAME', 'login');
  * Path for SquirrelMail required files.
  * @ignore
  */
+ 
 define('SM_PATH','../');
 
 /* SquirrelMail required files. */
@@ -115,7 +116,7 @@ if (!empty($sel)) {
 header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
 header('Expires: Sat, 1 Jan 2000 00:00:00 GMT');
-
+header('Content-Type: text/html; charset=utf-8');
 do_hook('login_cookie');
 
 $loginname_value = (sqGetGlobalVar('loginname', $loginname) ? sm_encode_html_special_chars($loginname) : '');

@@ -59,12 +59,23 @@ function sqimap_run_command ($imap_stream, $query, $handle_errors, &$response,
                             &$message, $unique_id = false,$filter=false,
                              $outputstream=false,$no_return=false) {
     if ($imap_stream) {
+		
         $sid = sqimap_session_id($unique_id);
+		//echo "x=".$query.'<br>';
+		//$query = "LOGIN ชั่วโมง ชั่วโมง";
+		//echo "qe=".$query;
+		//exit;
         fputs ($imap_stream, $sid . ' ' . $query . "\r\n");
         $read = sqimap_read_data ($imap_stream, $sid, $handle_errors, $response,
                                   $message, $query,$filter,$outputstream,$no_return);
+        /*echo "q=".$query;
+		echo "m=".$message;
+		echo "re".$response;
+		echo "1234xx";*/
+		//exit;		 
         return $read;
     } else {
+		 
         global $squirrelmail_language, $color;
         set_up_language($squirrelmail_language);
         require_once(SM_PATH . 'functions/display_messages.php');
@@ -578,6 +589,7 @@ function sqimap_login ($username, $password, $imap_server_address, $imap_port, $
             $message .= '  Please contact your system administrator.';
         }
     } elseif ($imap_auth_mech == 'login') {
+		
         // this is a workaround to alert users of LOGINDISABLED, which is done "right" in
         // devel but requires functions not available in stable. RFC requires us to
         // not send LOGIN when LOGINDISABLED is advertised.
@@ -590,17 +602,30 @@ function sqimap_login ($username, $password, $imap_server_address, $imap_port, $
             }
             $message .= _("Please contact your system administrator and report this error.");
         } else {
+			
+			
             // Original IMAP login code
             if(sq_is8bit($username) || sq_is8bit($password)) {
+				 
                 $query['commands'][0] = 'LOGIN';
                 $query['literal_args'][0] = $username;
                 $query['commands'][1] = '';
                 $query['literal_args'][1] = $password;
                 $read = sqimap_run_literal_command($imap_stream, $query, false, $response, $message);
             } else {
-                $query = 'LOGIN "' . quoteimap($username) . '"'
-                       . ' "' . quoteimap($password) . '"';
+				
+                $query = 'LOGIN ' . $username . ' '
+                       . ' ' . $password . ' ';
+					
+				$query = "LOGIN $username $password";
+				//$query = "LOGIN ชั่วโมง ชั่วโมง";
+				//exit;				
                 $read = sqimap_run_command ($imap_stream, $query, false, $response, $message);
+			/*	echo $query;
+				echo $query;
+				echo $message;
+				echo $response;*/
+				 
             }
         }
     } elseif ($imap_auth_mech == 'plain') {
@@ -648,6 +673,8 @@ function sqimap_login ($username, $password, $imap_server_address, $imap_port, $
         $message="Internal SquirrelMail error - unknown IMAP authentication method chosen.  Please contact the developers.";
     }
 
+	//echo "<br><bR>RE=".$response;
+	 
     /* If the connection was not successful, lets see why */
     if ($response != 'OK') {
         if (!$hide) {
@@ -693,6 +720,8 @@ function sqimap_login ($username, $password, $imap_server_address, $imap_port, $
             exit;
         }
     }
+	
+	 
     return $imap_stream;
 }
 

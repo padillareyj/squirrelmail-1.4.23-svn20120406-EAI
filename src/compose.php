@@ -25,7 +25,7 @@ define('PAGE_NAME', 'compose');
  * @ignore
  */
 define('SM_PATH','../');
-
+ header('Content-Type: text/html; charset=utf-8');
 /* SquirrelMail required files. */
 require_once(SM_PATH . 'include/validate.php');
 require_once(SM_PATH . 'functions/global.php');
@@ -44,6 +44,7 @@ require_once(SM_PATH . 'functions/identity.php');
 sqgetGlobalVar('key',       $key,           SQ_COOKIE);
 
 /** SESSION VARS */
+
 sqgetGlobalVar('username',  $username,      SQ_SESSION);
 sqgetGlobalVar('onetimepad',$onetimepad,    SQ_SESSION);
 sqgetGlobalVar('base_uri',  $base_uri,      SQ_SESSION);
@@ -355,6 +356,7 @@ if (!isset($session) || (isset($newmessage) && $newmessage)) {
     $composesession = $session;
     sqsession_register($composesession,'composesession');
 }
+
 if (!empty($compose_messages[$session])) {
     $composeMessage = $compose_messages[$session];
 } else {
@@ -487,13 +489,16 @@ if ($send) {
         }
         $body = $newBody;
 
+	
         $Result = deliverMessage($composeMessage);
+		
+	 
         do_hook('compose_send_after', $Result, $composeMessage);
         if (! $Result) {
             showInputForm($session);
             exit();
         }
-
+	
         /* if it is resumed draft, delete draft message */
         if ( isset($delete_draft)) {
             Header("Location: $location/delete_message.php?mailbox=" . urlencode( $draft_folder ).
@@ -1532,6 +1537,7 @@ function getByteSize($ini_size) {
  *
  */
 function deliverMessage(&$composeMessage, $draft=false) {
+	
     global $send_to, $send_to_cc, $send_to_bcc, $mailprio, $subject, $body,
         $username, $popuser, $usernamedata, $identity, $idents, $data_dir,
         $request_mdn, $request_dr, $default_charset, $color, $useSendmail,
@@ -1541,12 +1547,14 @@ function deliverMessage(&$composeMessage, $draft=false) {
     $rfc822_header = $composeMessage->rfc822_header;
 
     $abook = addressbook_init(false, true);
+	
+	
     $rfc822_header->to = $rfc822_header->parseAddress($send_to,true, array(), '', $domain, array(&$abook,'lookup'));
     $rfc822_header->cc = $rfc822_header->parseAddress($send_to_cc,true,array(), '',$domain, array(&$abook,'lookup'));
     $rfc822_header->bcc = $rfc822_header->parseAddress($send_to_bcc,true, array(), '',$domain, array(&$abook,'lookup'));
     $rfc822_header->priority = $mailprio;
     $rfc822_header->subject = $subject;
-
+    
     $special_encoding='';
     if (strtolower($default_charset) == 'iso-2022-jp') {
         if (mb_detect_encoding($body) == 'ASCII') {
@@ -1556,6 +1564,7 @@ function deliverMessage(&$composeMessage, $draft=false) {
             $special_encoding = '7bit';
         }
     }
+	 
     $composeMessage->setBody($body);
 
     if (preg_match('|^([^@%/]+)[@%/](.+)$|', $username, $usernamedata)) {
@@ -1565,6 +1574,7 @@ function deliverMessage(&$composeMessage, $draft=false) {
     } else {
         $popuser = $username;
     }
+	 
     $reply_to = '';
     $from_mail = $idents[$identity]['email_address'];
     $full_name = $idents[$identity]['full_name'];
@@ -1572,7 +1582,9 @@ function deliverMessage(&$composeMessage, $draft=false) {
     if (!$from_mail) {
         $from_mail = "$popuser@$domain";
     }
+	 
     $rfc822_header->from = $rfc822_header->parseAddress($from_mail,true);
+	 
     if (!$rfc822_header->from[0]->host) $rfc822_header->from[0]->host = $domain;
     if ($full_name) {
         $from = $rfc822_header->from[0];
@@ -1647,24 +1659,32 @@ function deliverMessage(&$composeMessage, $draft=false) {
     if ( is_object($hookReturn[1]) ) {
         $composeMessage = $hookReturn[1];
     }
-
+ 
     if (!$useSendmail && !$draft) {
+	
         require_once(SM_PATH . 'class/deliver/Deliver_SMTP.class.php');
         $deliver = new Deliver_SMTP();
         global $smtpServerAddress, $smtpPort, $pop_before_smtp, $pop_before_smtp_host;
 
+		 
         $authPop = (isset($pop_before_smtp) && $pop_before_smtp) ? true : false;
         
         $user = '';
         $pass = '';
         if (empty($pop_before_smtp_host))
             $pop_before_smtp_host = $smtpServerAddress;
-        
+   
         get_smtp_user($user, $pass);
-
+		//$user = 'pensri';
+		//$pass = 'pensri';
+		
         $stream = $deliver->initStream($composeMessage,$domain,0,
                 $smtpServerAddress, $smtpPort, $user, $pass, $authPop, $pop_before_smtp_host);
+     	
+		//echo "55";
+		//exit;
     } elseif (!$draft) {
+	
         require_once(SM_PATH . 'class/deliver/Deliver_SendMail.class.php');
         global $sendmail_path, $sendmail_args;
         // Check for outdated configuration
@@ -1675,8 +1695,10 @@ function deliverMessage(&$composeMessage, $draft=false) {
                 $sendmail_args = '-i -t';
             }
         }
+		
         $deliver = new Deliver_SendMail(array('sendmail_args'=>$sendmail_args));
         $stream = $deliver->initStream($composeMessage,$sendmail_path);
+		
     } elseif ($draft) {
         global $draft_folder;
         $imap_stream = sqimap_login($username, $key, $imapServerAddress,
@@ -1697,10 +1719,15 @@ function deliverMessage(&$composeMessage, $draft=false) {
         }
     }
     $succes = false;
+	
+	//echo "awt";
+	//exit;
     if ($stream) {
+		 
         $deliver->mail($composeMessage, $stream, $reply_id, $reply_ent_id);
         $succes = $deliver->finalizeStream($stream);
     }
+	
     if (!$succes) {
         $msg = _("Message not sent.") . ' ' . _("Server replied:")
              . "\n<blockquote>\n"

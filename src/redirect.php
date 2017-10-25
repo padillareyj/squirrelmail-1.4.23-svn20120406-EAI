@@ -35,6 +35,7 @@ require_once(SM_PATH . 'functions/page_header.php');
 header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
 header('Expires: Sat, 1 Jan 2000 00:00:00 GMT');
+header('Content-Type: text/html; charset=utf-8');
 $location = get_location();
 
 sqsession_is_active();
@@ -67,6 +68,7 @@ if (!isset($login_username)) {
     exit;
 }
 
+ 
 if (!sqsession_is_registered('user_is_logged_in')) {
     do_hook ('login_before');
 
@@ -101,10 +103,15 @@ if (!sqsession_is_registered('user_is_logged_in')) {
     if ($force_username_lowercase) {
         $login_username = strtolower($login_username);
     }
+	
 
     $imapConnection = sqimap_login($login_username, $key, $imapServerAddress, $imapPort, 0);
+	//echo "<br>LOL =$login_username, $key, $imapServerAddress, $imapPort, 0 <br>";
+	//echo "rao";
+	 
 
     $sqimap_capabilities = sqimap_capability($imapConnection);
+	 
     sqsession_register($sqimap_capabilities, 'sqimap_capabilities');
     $delimiter = sqimap_get_delimiter ($imapConnection);
 

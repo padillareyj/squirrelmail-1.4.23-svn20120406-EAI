@@ -36,6 +36,7 @@ function displayHtmlHeader( $title = 'SquirrelMail', $xtra = '', $do_hook = TRUE
          ? '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">'
          : /* "quirks" */ '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">')) .
          "\n\n" . html_tag( 'html' ,'' , '', '', '' ) . "\n<head>\n" .
+		 " <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\"></meta>".
          "<meta name=\"robots\" content=\"noindex,nofollow\">\n" .
          "<meta http-equiv=\"x-dns-prefetch-control\" content=\"off\">\n";
 

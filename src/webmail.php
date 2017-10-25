@@ -13,6 +13,7 @@
  * @package squirrelmail
  */
 
+ header('Content-Type: text/html; charset=utf-8');
 /** This is the webmail page */
 define('PAGE_NAME', 'webmail');
 
